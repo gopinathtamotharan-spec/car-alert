@@ -1,0 +1,36 @@
+name: SGCarMart Car Alert
+
+on:
+  schedule:
+    - cron: "0 9 */3 * *"   # runs every 3 days at 9:00 AM UTC (5:00 PM SGT)
+  workflow_dispatch:          # lets you also trigger it manually from GitHub
+
+jobs:
+  run-alert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run alert script
+        env:
+          EMAIL_SENDER:    ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD:  ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: python sgcarmart_alert.py
+
+      - name: Save seen listings cache
+        uses: actions/cache@v4
+        with:
+          path: seen_listings.json
+          key: seen-listings-${{ github.run_id }}
+          restore-keys: seen-listings-
